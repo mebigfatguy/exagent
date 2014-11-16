@@ -6,7 +6,7 @@
     <property name="src.dir" value="${basedir}/src" />
     <property name="target.dir" value="${basedir}/target" />
     <property name="classes.dir" value="${target.dir}/classes" />
-    <property name="lib.dir" value="${target.dir}/lib" />
+    <property name="lib.dir" value="${basedir}/lib" />
     <property name="javadoc.dir" value="${target.dir}/javadoc" />
     
     <property name="javac.source" value="1.7" />
