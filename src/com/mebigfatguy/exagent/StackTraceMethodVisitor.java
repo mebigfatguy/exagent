@@ -30,10 +30,20 @@ import org.objectweb.asm.TypePath;
 public class StackTraceMethodVisitor extends MethodVisitor {
 
     private List<MethodInfo> methodInfo;
+    private String clsName;
+    private String methodDescription;
     
     public StackTraceMethodVisitor(List<MethodInfo> methodInfo) {
         super(Opcodes.ASM5);
         this.methodInfo = methodInfo;
+    }
+    
+    public void setClass(String cls) {
+        clsName = clsName;
+    }
+    
+    public void setMethodDescription(String description) {
+        methodDescription = description;
     }
     
     @Override
