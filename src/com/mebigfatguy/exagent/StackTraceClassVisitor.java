@@ -29,19 +29,19 @@ import org.objectweb.asm.TypePath;
 
 public class StackTraceClassVisitor extends ClassVisitor {
 
-    private List<MethodInfo> methodInfo;
-    private StackTraceMethodVisitor methodVisitor;
+    private List<MethodInfo> callStack;
+    private String clsName;
     
-    public StackTraceClassVisitor(ClassWriter cw, List<MethodInfo> methodInfo) {
+    public StackTraceClassVisitor(ClassWriter cw, List<MethodInfo> cs) {
         super(Opcodes.ASM5, cw);
-        this.methodInfo = methodInfo;
-        methodVisitor = new StackTraceMethodVisitor(methodInfo);
+        callStack = cs;
     }
     
     @Override
     public void visit(int version, int access, String name, String signature,
             String superName, String[] interfaces) {
-        methodVisitor.setClass(name);
+        clsName = name;
+        super.visit(version, access, name, signature, superName, interfaces);
     }
 
     @Override
@@ -52,8 +52,8 @@ public class StackTraceClassVisitor extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc,
             String signature, String[] exceptions) {
-        methodVisitor.setMethodDescription(desc);
-        return methodVisitor;
+        MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+        return new StackTraceMethodVisitor(mv, callStack, clsName, desc);
     }
 
     @Override

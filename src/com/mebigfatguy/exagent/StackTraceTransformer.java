@@ -41,6 +41,7 @@ public class StackTraceTransformer implements ClassFileTransformer {
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer) throws IllegalClassFormatException {
         
+        System.out.println(className);
         ClassReader cr = new ClassReader(classfileBuffer);
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
         ClassVisitor stackTraceVisitor = new StackTraceClassVisitor(cw, METHOD_INFO.get());
