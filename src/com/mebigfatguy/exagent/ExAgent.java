@@ -25,4 +25,9 @@ public class ExAgent {
         StackTraceTransformer mutator = new StackTraceTransformer();
         instrumentation.addTransformer(mutator);
     }
+    
+    @Override
+    public String toString() {
+        return ToString.build(this);
+    }
 }

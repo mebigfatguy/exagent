@@ -24,11 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 
 public class StackTraceTransformer implements ClassFileTransformer {
 
-    private static ThreadLocal<List<MethodInfo>> METHOD_PARMS = new ThreadLocal<List<MethodInfo>>() {
+    private static ThreadLocal<List<MethodInfo>> METHOD_INFO = new ThreadLocal<List<MethodInfo>>() {
         @Override 
         protected List<MethodInfo> initialValue() {
             return new ArrayList<>();
@@ -42,6 +43,14 @@ public class StackTraceTransformer implements ClassFileTransformer {
         
         ClassReader cr = new ClassReader(classfileBuffer);
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
+        ClassVisitor stackTraceVisitor = new StackTraceVisitor(cw, METHOD_INFO.get());
+        cr.accept(stackTraceVisitor, 0);
+        
         return cw.toByteArray();
-    }    
+    }
+    
+    @Override
+    public String toString() {
+        return ToString.build(this);
+    }
 }
