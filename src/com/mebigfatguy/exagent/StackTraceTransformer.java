@@ -43,7 +43,7 @@ public class StackTraceTransformer implements ClassFileTransformer {
         
         ClassReader cr = new ClassReader(classfileBuffer);
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
-        ClassVisitor stackTraceVisitor = new StackTraceVisitor(cw, METHOD_INFO.get());
+        ClassVisitor stackTraceVisitor = new StackTraceClassVisitor(cw, METHOD_INFO.get());
         cr.accept(stackTraceVisitor, 0);
         
         return cw.toByteArray();
