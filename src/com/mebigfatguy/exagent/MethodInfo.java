@@ -17,12 +17,34 @@
  */
 package com.mebigfatguy.exagent;
 
-import java.lang.instrument.Instrumentation;
+import java.util.Map;
 
-public class ExAgent {
+public class MethodInfo {
 
-    public static void premain(String agentArguments, Instrumentation instrumentation) {
-        StackTraceTransformer mutator = new StackTraceTransformer();
-        instrumentation.addTransformer(mutator);
+    private Class<?> cls;
+    private String name;
+    private Map<String, String> parmMap;
+    
+    public MethodInfo(Class<?> cls, String name, Map<String, String> parmMap) {
+        this.cls = cls;
+        this.name = name;
+        this.parmMap = parmMap;
+    }
+
+    public Class<?> getCls() {
+        return cls;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Map<String, String> getParmMap() {
+        return parmMap;
+    }
+    
+    @Override
+    public String toString() {
+        return ToString.build(this);
     }
 }
