@@ -19,6 +19,8 @@ package com.mebigfatguy.exagent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
@@ -30,23 +32,34 @@ import org.objectweb.asm.TypePath;
 
 public class StackTraceMethodVisitor extends MethodVisitor {
 
+    private static Pattern PARM_PATTERN = Pattern.compile("([ZCBSIJFD]|(?:L[^;]+;)+)");
+    
     private List<MethodInfo> callStack;
     private String clsName;
-    private String methodDescription;
-    private List<String> parmNames;
+    private String methodName;
+    private List<Parm> parms = new ArrayList<>();
+    private int parmCnt;
     
-    public StackTraceMethodVisitor(MethodVisitor mv, List<MethodInfo> cs, String cls, String desc) {
+    public StackTraceMethodVisitor(MethodVisitor mv, List<MethodInfo> cs, String cls, String mName, boolean isStatic, String desc) {
         super(Opcodes.ASM5, mv);
         callStack = cs;
         clsName = cls;
-        methodDescription = desc;  
-        parmNames = new ArrayList<>();
+        methodName = mName;
+        
+        int register = isStatic ? 0 : 1;
+        int parmIdx = 1;
+        List<String> sigs = parseSignature(desc);
+        for (String sig : sigs) {
+            parms.add(new Parm("parm " + parmIdx++, register));
+            register += ("J".equals(sig) || "D".equals(sig)) ? 2 : 1;
+        }
     }
     
     @Override
     public void visitParameter(String name, int access) {
         super.visitParameter(name, access);
-        parmNames.add(name);
+        if (name != null)
+            parms.get(++parmCnt).name = name;
     }
 
     @Override
@@ -80,8 +93,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     }
 
     @Override
-    public void visitFieldInsn(int opcode, String owner, String name,
-            String desc) {
+    public void visitFieldInsn(int opcode, String owner, String name, String desc) {
         super.visitFieldInsn(opcode, owner, name, desc);
     }
 
@@ -92,8 +104,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     }
 
     @Override
-    public void visitInvokeDynamicInsn(String name, String desc, Handle bsm,
-            Object... bsmArgs) {
+    public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
         super.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
     }
 
@@ -118,8 +129,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     }
 
     @Override
-    public void visitTableSwitchInsn(int min, int max, Label dflt,
-            Label... labels) {
+    public void visitTableSwitchInsn(int min, int max, Label dflt, Label... labels) {
         super.visitTableSwitchInsn(min, max, dflt, labels);
     }
 
@@ -134,14 +144,12 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     }
 
     @Override
-    public void visitTryCatchBlock(Label start, Label end, Label handler,
-            String type) {
+    public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
         super.visitTryCatchBlock(start, end, handler, type);
     }
 
     @Override
-    public AnnotationVisitor visitTryCatchAnnotation(int typeRef,
-            TypePath typePath, String desc, boolean visible) {
+    public AnnotationVisitor visitTryCatchAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
         return super.visitTryCatchAnnotation(typeRef, typePath, desc, visible);
     }
     
@@ -150,9 +158,40 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         super.visitEnd();
     }
     
+    private static List<String> parseSignature(String signature) {
+        List<String> parms = new ArrayList<>();
+        
+        int openParenPos = signature.indexOf('(');
+        int closeParenPos = signature.indexOf(')', openParenPos+1);
+        
+        String args = signature.substring(openParenPos + 1, closeParenPos);
+        if (!args.isEmpty()) {
+            Matcher m = PARM_PATTERN.matcher(args);
+            while (m.find()) {
+                parms.add(m.group(1));
+            }
+        }
+        
+        return parms;
+    }
+    
     @Override
     public String toString() {
         return ToString.build(this);
     }
-
+    
+    static class Parm {
+        String name;
+        int register;
+        
+        Parm(String nm, int reg) {
+            name = nm;
+            register = reg;
+        }
+        
+        @Override
+        public String toString() {
+            return ToString.build(this);
+        }
+    }
 }

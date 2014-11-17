@@ -19,13 +19,11 @@ package com.mebigfatguy.exagent;
 
 import java.util.List;
 
-import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.TypePath;
 
 public class StackTraceClassVisitor extends ClassVisitor {
 
@@ -38,8 +36,7 @@ public class StackTraceClassVisitor extends ClassVisitor {
     }
     
     @Override
-    public void visit(int version, int access, String name, String signature,
-            String superName, String[] interfaces) {
+    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         clsName = name;
         super.visit(version, access, name, signature, superName, interfaces);
     }
@@ -50,10 +47,9 @@ public class StackTraceClassVisitor extends ClassVisitor {
     }
 
     @Override
-    public MethodVisitor visitMethod(int access, String name, String desc,
-            String signature, String[] exceptions) {
+    public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        return new StackTraceMethodVisitor(mv, callStack, clsName, desc);
+        return new StackTraceMethodVisitor(mv, callStack, clsName, name, (access & Opcodes.ACC_STATIC) != 0, desc);
     }
 
     @Override
