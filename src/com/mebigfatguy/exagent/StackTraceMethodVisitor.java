@@ -175,6 +175,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         // ExAgent.METHOD_INFO.get();
         super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", THREADLOCAL_CLASS_NAME);
         super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
+        super.visitTypeInsn(Opcodes.CHECKCAST, HASHMAP_CLASS_NAME);
         
         //new MethodInfo(cls, name, parmMap);
         super.visitTypeInsn(Opcodes.NEW, METHODINFO_CLASS_NAME);
