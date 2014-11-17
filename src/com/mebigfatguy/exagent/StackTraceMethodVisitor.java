@@ -18,6 +18,7 @@
 package com.mebigfatguy.exagent;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,21 +29,26 @@ import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.TypePath;
 
 public class StackTraceMethodVisitor extends MethodVisitor {
 
     private static Pattern PARM_PATTERN = Pattern.compile("([ZCBSIJFD]|(?:L[^;]+;)+)");
     
-    private List<MethodInfo> callStack;
+    private static String EXAGENT_CLASS_NAME = ExAgent.class.getName().replace('.', '/');
+    private static String METHODINFO_CLASS_NAME = MethodInfo.class.getName().replace('.', '/');
+    private static String HASHMAP_CLASS_NAME = HashMap.class.getName().replace('.',  '/');
+    private static String THREADLOCAL_CLASS_NAME = ThreadLocal.class.getName().replace('.', '/');
+    private static String LIST_CLASS_NAME = List.class.getName().replace('.', '/');
+    
     private String clsName;
     private String methodName;
     private List<Parm> parms = new ArrayList<>();
     private int parmCnt;
     
-    public StackTraceMethodVisitor(MethodVisitor mv, List<MethodInfo> cs, String cls, String mName, boolean isStatic, String desc) {
+    public StackTraceMethodVisitor(MethodVisitor mv, String cls, String mName, boolean isStatic, String desc) {
         super(Opcodes.ASM5, mv);
-        callStack = cs;
         clsName = cls;
         methodName = mName;
         
@@ -70,6 +76,28 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     @Override
     public void visitCode() {
         super.visitCode();
+        
+        // ExAgent.METHOD_INFO.get();
+        super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", THREADLOCAL_CLASS_NAME);
+        super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
+        
+        //new MethodInfo(cls, name, parmMap);
+        
+        super.visitTypeInsn(Opcodes.NEW, METHODINFO_CLASS_NAME);
+        super.visitInsn(Opcodes.DUP);
+        super.visitLdcInsn(Type.getObjectType(clsName.replace('.',  '/')));
+        super.visitLdcInsn(methodName);
+        
+        super.visitTypeInsn(Opcodes.NEW, HashMap.class.getName().replace('.',  '/'));
+        super.visitInsn(Opcodes.DUP);
+        super.visitMethodInsn(Opcodes.INVOKESPECIAL, HASHMAP_CLASS_NAME, "<init>", "()V", false);
+        
+        super.visitMethodInsn(Opcodes.INVOKESPECIAL,  METHODINFO_CLASS_NAME, "<init>", "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/HashMap;)V", false);
+
+        //add(methodInfo);
+        
+        super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "add", "(Ljava/lang/Object;)Z", true);
+        super.visitInsn(Opcodes.POP);
     }
 
     @Override

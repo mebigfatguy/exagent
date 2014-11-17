@@ -19,6 +19,8 @@ package com.mebigfatguy.exagent;
 
 import java.util.List;
 
+import jdk.internal.org.objectweb.asm.util.CheckMethodAdapter;
+
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -27,12 +29,10 @@ import org.objectweb.asm.Opcodes;
 
 public class StackTraceClassVisitor extends ClassVisitor {
 
-    private List<MethodInfo> callStack;
     private String clsName;
     
-    public StackTraceClassVisitor(ClassWriter cw, List<MethodInfo> cs) {
+    public StackTraceClassVisitor(ClassWriter cw) {
         super(Opcodes.ASM5, cw);
-        callStack = cs;
     }
     
     @Override
@@ -49,7 +49,7 @@ public class StackTraceClassVisitor extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        return new StackTraceMethodVisitor(mv, callStack, clsName, name, (access & Opcodes.ACC_STATIC) != 0, desc);
+        return new StackTraceMethodVisitor(mv, clsName, name, (access & Opcodes.ACC_STATIC) != 0, desc);
     }
 
     @Override

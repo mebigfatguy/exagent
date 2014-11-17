@@ -18,9 +18,18 @@
 package com.mebigfatguy.exagent;
 
 import java.lang.instrument.Instrumentation;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ExAgent {
 
+    static ThreadLocal<List<MethodInfo>> METHOD_INFO = new ThreadLocal<List<MethodInfo>>() {
+        @Override 
+        protected List<MethodInfo> initialValue() {
+            return new ArrayList<>();
+        }
+    };
+    
     public static void premain(String agentArguments, Instrumentation instrumentation) {
         StackTraceTransformer mutator = new StackTraceTransformer();
         instrumentation.addTransformer(mutator);
