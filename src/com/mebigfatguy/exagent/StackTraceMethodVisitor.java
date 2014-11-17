@@ -77,28 +77,12 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     public void visitCode() {
         super.visitCode();
         
-        // ExAgent.METHOD_INFO.get();
-        super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", THREADLOCAL_CLASS_NAME);
-        super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
+        if (methodName.equals("<init>") || (methodName.equals("<clinit>"))) {
+            return;
+        }
         
-        //new MethodInfo(cls, name, parmMap);
-        
-        super.visitTypeInsn(Opcodes.NEW, METHODINFO_CLASS_NAME);
-        super.visitInsn(Opcodes.DUP);
-        super.visitLdcInsn(Type.getObjectType(clsName.replace('.',  '/')));
-        super.visitLdcInsn(methodName);
-        
-        super.visitTypeInsn(Opcodes.NEW, HashMap.class.getName().replace('.',  '/'));
-        super.visitInsn(Opcodes.DUP);
-        super.visitMethodInsn(Opcodes.INVOKESPECIAL, HASHMAP_CLASS_NAME, "<init>", "()V", false);
-        
-        super.visitMethodInsn(Opcodes.INVOKESPECIAL,  METHODINFO_CLASS_NAME, "<init>", "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/HashMap;)V", false);
-
-        //add(methodInfo);
-        
-        super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "add", "(Ljava/lang/Object;)Z", true);
-        super.visitInsn(Opcodes.POP);
-    }
+        injectCallStackPopulation();
+     }
 
     @Override
     public void visitInsn(int opcode) {
@@ -184,6 +168,29 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     @Override
     public void visitEnd() {
         super.visitEnd();
+    }
+    
+    private void injectCallStackPopulation() {
+        
+        // ExAgent.METHOD_INFO.get();
+        super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", THREADLOCAL_CLASS_NAME);
+        super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
+        
+        //new MethodInfo(cls, name, parmMap);
+        super.visitTypeInsn(Opcodes.NEW, METHODINFO_CLASS_NAME);
+        super.visitInsn(Opcodes.DUP);
+        super.visitLdcInsn(Type.getObjectType(clsName.replace('.',  '/')));
+        super.visitLdcInsn(methodName);
+        
+        super.visitTypeInsn(Opcodes.NEW, HashMap.class.getName().replace('.',  '/'));
+        super.visitInsn(Opcodes.DUP);
+        super.visitMethodInsn(Opcodes.INVOKESPECIAL, HASHMAP_CLASS_NAME, "<init>", "()V", false);
+        
+        super.visitMethodInsn(Opcodes.INVOKESPECIAL,  METHODINFO_CLASS_NAME, "<init>", "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/HashMap;)V", false);
+
+        //add(methodInfo);
+        super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "add", "(Ljava/lang/Object;)Z", true);
+        super.visitInsn(Opcodes.POP);
     }
     
     private static List<String> parseSignature(String signature) {
