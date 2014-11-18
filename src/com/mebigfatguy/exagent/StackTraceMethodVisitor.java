@@ -152,10 +152,10 @@ public class StackTraceMethodVisitor extends MethodVisitor {
                 super.visitInsn(Opcodes.DUP);
                 super.visitLdcInsn(true);
                 super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, FIELD_CLASS_NAME, "setAccessible", "(Z)V", false);
-                super.visitInsn(Opcodes.DUP2_X1);
                 super.visitInsn(Opcodes.SWAP);
-                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, FIELD_CLASS_NAME, "setValue", "(Ljava/lang/Object;)V", false);
+                super.visitInsn(Opcodes.DUP2_X1);
                 super.visitInsn(Opcodes.POP2);
+                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, FIELD_CLASS_NAME, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V", false);
                 super.visitJumpInsn(Opcodes.GOTO, continueLabel);
                 super.visitLabel(endTryLabel);
                 super.visitLabel(catchLabel);
