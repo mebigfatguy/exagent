@@ -17,30 +17,15 @@
  */
 package com.mebigfatguy.exagent;
 
-import java.util.List;
-
-public class MethodInfo {
-
-    private Class<?> cls;
-    private String name;
-    private List<String> parms;
+public class Parm {
+    String name;
+    String signature;
+    int register;
     
-    public MethodInfo(Class<?> cls, String name, List<String> parms) {
-        this.cls = cls;
-        this.name = name;
-        this.parms = parms;
-    }
-
-    public Class<?> getCls() {
-        return cls;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public List<String> getParms() {
-        return parms;
+    Parm(String nm, String sig, int reg) {
+        name = nm;
+        signature = sig;
+        register = reg;
     }
     
     @Override
