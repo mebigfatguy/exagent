@@ -57,6 +57,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     private String methodName;
     private List<Parm> parms = new ArrayList<>();
     private int parmCnt;
+    private boolean isCtor;
     
     public StackTraceMethodVisitor(MethodVisitor mv, String cls, String mName, boolean isStatic, String desc) {
         super(Opcodes.ASM5, mv);
@@ -88,7 +89,8 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     public void visitCode() {
         super.visitCode();
         
-        if (methodName.equals("<init>") || (methodName.equals("<clinit>"))) {
+        isCtor = methodName.equals("<init>");
+        if (isCtor || (methodName.equals("<clinit>"))) {
             return;
         }
         
@@ -97,7 +99,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitInsn(int opcode) {
-        if (RETURN_CODES.get(opcode)) {
+        if (!isCtor && RETURN_CODES.get(opcode)) {
             // ExAgent.METHOD_INFO.get();
             super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", signaturizeClass(THREADLOCAL_CLASS_NAME));
             super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
