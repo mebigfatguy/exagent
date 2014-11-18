@@ -17,6 +17,7 @@
  */
 package com.mebigfatguy.exagent;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -42,6 +43,11 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     private static String THREADLOCAL_CLASS_NAME = ThreadLocal.class.getName().replace('.', '/');
     private static String LIST_CLASS_NAME = List.class.getName().replace('.', '/');
     private static String ARRAYLIST_CLASS_NAME = ArrayList.class.getName().replace('.', '/');
+    private static String THROWABLE_CLASS_NAME = Throwable.class.getName().replace('.', '/');
+    private static String OBJECT_CLASS_NAME = Object.class.getName().replace('.', '/');
+    private static String CLASS_CLASS_NAME = Class.class.getName().replace('.', '/');
+    private static String FIELD_CLASS_NAME = Field.class.getName().replace('.', '/');
+    private static String NOSUCHFIELDEXCEPTION_CLASS_NAME = NoSuchFieldException.class.getName().replace('.', '/');
     
     private static BitSet RETURN_CODES = new BitSet();
     static {
@@ -99,19 +105,64 @@ public class StackTraceMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitInsn(int opcode) {
-        if (!isCtor && RETURN_CODES.get(opcode)) {
-            // ExAgent.METHOD_INFO.get();
-            super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", signaturizeClass(THREADLOCAL_CLASS_NAME));
-            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
-            super.visitTypeInsn(Opcodes.CHECKCAST, LIST_CLASS_NAME);
-            
-            //remove(list.size() - 1);
-            super.visitInsn(Opcodes.DUP);
-            super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "size", "()I", true);
-            super.visitInsn(Opcodes.ICONST_1);
-            super.visitInsn(Opcodes.ISUB);
-            super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "remove", "(I)Ljava/lang/Object;", true);
-            super.visitInsn(Opcodes.POP);
+        if (!isCtor) {
+            if (RETURN_CODES.get(opcode)) {
+                // ExAgent.METHOD_INFO.get();
+                super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", signaturizeClass(THREADLOCAL_CLASS_NAME));
+                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
+                super.visitTypeInsn(Opcodes.CHECKCAST, LIST_CLASS_NAME);
+                
+                //remove(list.size() - 1);
+                super.visitInsn(Opcodes.DUP);
+                super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "size", "()I", true);
+                super.visitInsn(Opcodes.ICONST_1);
+                super.visitInsn(Opcodes.ISUB);
+                super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "remove", "(I)Ljava/lang/Object;", true);
+                super.visitInsn(Opcodes.POP);
+            } else if (opcode == Opcodes.ATHROW) {
+                
+                Label tryLabel = new Label();
+                Label endTryLabel = new Label();
+                Label catchLabel = new Label();
+                Label continueLabel = new Label();
+                
+                super.visitLabel(tryLabel);
+                
+                super.visitInsn(Opcodes.DUP);                
+                super.visitInsn(Opcodes.DUP);
+                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THROWABLE_CLASS_NAME, "getMessage", "()Ljava/lang/String;", false);
+                
+                super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", signaturizeClass(THREADLOCAL_CLASS_NAME));
+                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
+                super.visitTypeInsn(Opcodes.CHECKCAST, LIST_CLASS_NAME);
+                
+                super.visitInsn(Opcodes.DUP);
+                super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "size", "()I", true);
+                super.visitInsn(Opcodes.ICONST_1);
+                super.visitInsn(Opcodes.ISUB);
+                super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "remove", "(I)Ljava/lang/Object;", true);
+
+                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, OBJECT_CLASS_NAME, "toString", "()Ljava/lang/String;", false);
+                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, STRING_CLASS_NAME, "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
+                super.visitInsn(Opcodes.SWAP);
+                super.visitInsn(Opcodes.DUP);
+                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, OBJECT_CLASS_NAME, "getClass",  "()Ljava/lang/Class;", false);
+                super.visitLdcInsn("detailMessage");
+                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, CLASS_CLASS_NAME, "getDeclaredField", "(Ljava/lang/String;)Ljava/lang/reflect/Field;", false);
+                super.visitInsn(Opcodes.DUP);
+                super.visitLdcInsn(true);
+                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, FIELD_CLASS_NAME, "setAccessible", "(Z)V", false);
+                super.visitInsn(Opcodes.DUP2_X1);
+                super.visitInsn(Opcodes.SWAP);
+                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, FIELD_CLASS_NAME, "setValue", "(Ljava/lang/Object;)V", false);
+                super.visitInsn(Opcodes.POP2);
+                super.visitJumpInsn(Opcodes.GOTO, continueLabel);
+                super.visitLabel(endTryLabel);
+                super.visitLabel(catchLabel);
+                super.visitInsn(Opcodes.POP);
+                super.visitLabel(continueLabel);
+                super.visitTryCatchBlock(tryLabel, endTryLabel, catchLabel, NOSUCHFIELDEXCEPTION_CLASS_NAME);
+            }
         }
         super.visitInsn(opcode);
     }
