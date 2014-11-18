@@ -17,6 +17,11 @@
  */
 package com.mebigfatguy.exagent;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
@@ -32,13 +37,35 @@ public class StackTraceTransformer implements ClassFileTransformer {
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer) throws IllegalClassFormatException {
         
+        if (className.startsWith("java/") 
+         || className.startsWith("javax/") 
+         || className.startsWith("sun/") 
+         || className.startsWith("com/mebigfatguy/exagent/")) {
+            return classfileBuffer;
+        }
+        
         System.out.println(className);
         ClassReader cr = new ClassReader(classfileBuffer);
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
         ClassVisitor stackTraceVisitor = new StackTraceClassVisitor(cw);
         cr.accept(stackTraceVisitor, 0);
         
+        debugWriteBytes(className, cw.toByteArray());
         return cw.toByteArray();
+    }
+    
+    private static void debugWriteBytes(String className, byte[] data) {
+        File f = new File(System.getProperty("user.home"), "exaclasses");
+        f.mkdirs();
+        f = new File(f, className + ".class");
+        f.getParentFile().mkdirs();
+        
+        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(f))) {
+            os.write(data);
+            
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
     
     @Override

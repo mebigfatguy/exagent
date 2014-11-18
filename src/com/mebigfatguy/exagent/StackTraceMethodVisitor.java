@@ -173,9 +173,9 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     private void injectCallStackPopulation() {
         
         // ExAgent.METHOD_INFO.get();
-        super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", THREADLOCAL_CLASS_NAME);
+        super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", signaturizeClass(THREADLOCAL_CLASS_NAME));
         super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
-        super.visitTypeInsn(Opcodes.CHECKCAST, HASHMAP_CLASS_NAME);
+        super.visitTypeInsn(Opcodes.CHECKCAST, LIST_CLASS_NAME);
         
         //new MethodInfo(cls, name, parmMap);
         super.visitTypeInsn(Opcodes.NEW, METHODINFO_CLASS_NAME);
@@ -187,7 +187,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         super.visitInsn(Opcodes.DUP);
         super.visitMethodInsn(Opcodes.INVOKESPECIAL, HASHMAP_CLASS_NAME, "<init>", "()V", false);
         
-        super.visitMethodInsn(Opcodes.INVOKESPECIAL,  METHODINFO_CLASS_NAME, "<init>", "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/HashMap;)V", false);
+        super.visitMethodInsn(Opcodes.INVOKESPECIAL,  METHODINFO_CLASS_NAME, "<init>", "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)V", false);
 
         //add(methodInfo);
         super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "add", "(Ljava/lang/Object;)Z", true);
@@ -209,6 +209,10 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         }
         
         return parms;
+    }
+    
+    private static String signaturizeClass(String className) {
+        return 'L' + className + ';';
     }
     
     @Override

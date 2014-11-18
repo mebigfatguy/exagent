@@ -23,7 +23,7 @@ import java.util.List;
 
 public class ExAgent {
 
-    static ThreadLocal<List<MethodInfo>> METHOD_INFO = new ThreadLocal<List<MethodInfo>>() {
+    public static ThreadLocal<List<MethodInfo>> METHOD_INFO = new ThreadLocal<List<MethodInfo>>() {
         @Override 
         protected List<MethodInfo> initialValue() {
             return new ArrayList<>();
