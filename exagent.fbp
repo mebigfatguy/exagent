@@ -1,0 +1,5 @@
+<Project projectName="exagent">
+  <Jar>./target/classes</Jar>
+  <AuxClasspathEntry>./lib/asm-debug-all-5.0.3.jar</AuxClasspathEntry>
+  <SrcDir>./src</SrcDir>
+</Project>
