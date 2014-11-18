@@ -126,6 +126,8 @@ public class StackTraceMethodVisitor extends MethodVisitor {
                 Label catchLabel = new Label();
                 Label continueLabel = new Label();
                 
+                super.visitTryCatchBlock(tryLabel, endTryLabel, catchLabel, NOSUCHFIELDEXCEPTION_CLASS_NAME);
+                
                 super.visitLabel(tryLabel);
                 
                 super.visitInsn(Opcodes.DUP);                
@@ -161,7 +163,6 @@ public class StackTraceMethodVisitor extends MethodVisitor {
                 super.visitLabel(catchLabel);
                 super.visitInsn(Opcodes.POP);
                 super.visitLabel(continueLabel);
-                super.visitTryCatchBlock(tryLabel, endTryLabel, catchLabel, NOSUCHFIELDEXCEPTION_CLASS_NAME);
             }
         }
         super.visitInsn(opcode);
