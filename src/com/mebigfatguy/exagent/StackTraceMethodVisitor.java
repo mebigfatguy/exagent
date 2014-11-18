@@ -18,6 +18,7 @@
 package com.mebigfatguy.exagent;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,6 +42,16 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     private static String THREADLOCAL_CLASS_NAME = ThreadLocal.class.getName().replace('.', '/');
     private static String LIST_CLASS_NAME = List.class.getName().replace('.', '/');
     private static String ARRAYLIST_CLASS_NAME = ArrayList.class.getName().replace('.', '/');
+    
+    private static BitSet RETURN_CODES = new BitSet();
+    static {
+        RETURN_CODES.set(Opcodes.IRETURN);
+        RETURN_CODES.set(Opcodes.LRETURN);
+        RETURN_CODES.set(Opcodes.FRETURN);
+        RETURN_CODES.set(Opcodes.DRETURN);
+        RETURN_CODES.set(Opcodes.ARETURN);
+        RETURN_CODES.set(Opcodes.RETURN);
+    }
     
     private String clsName;
     private String methodName;
@@ -86,6 +97,20 @@ public class StackTraceMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitInsn(int opcode) {
+        if (RETURN_CODES.get(opcode)) {
+            // ExAgent.METHOD_INFO.get();
+            super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", signaturizeClass(THREADLOCAL_CLASS_NAME));
+            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
+            super.visitTypeInsn(Opcodes.CHECKCAST, LIST_CLASS_NAME);
+            
+            //remove(list.size() - 1);
+            super.visitInsn(Opcodes.DUP);
+            super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "size", "()I", true);
+            super.visitInsn(Opcodes.ICONST_1);
+            super.visitInsn(Opcodes.ISUB);
+            super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "remove", "(I)Ljava/lang/Object;", true);
+            super.visitInsn(Opcodes.POP);
+        }
         super.visitInsn(opcode);
     }
 
