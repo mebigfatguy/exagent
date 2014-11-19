@@ -59,6 +59,8 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         RETURN_CODES.set(Opcodes.RETURN);
     }
     
+    private static final String CTOR_NAME = "<init>";
+    
     private String clsName;
     private String methodName;
     private List<Parm> parms = new ArrayList<>();
@@ -98,8 +100,8 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     public void visitCode() {
         super.visitCode();
         
-        isCtor = methodName.equals("<init>");
-        if (isCtor || (methodName.equals("<clinit>"))) {
+        isCtor = CTOR_NAME.equals(methodName);
+        if (isCtor || ("<clinit>".equals(methodName))) {
             return;
         }
         
@@ -211,7 +213,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
             String desc, boolean itf) {
         super.visitMethodInsn(opcode, owner, name, desc, itf);
         
-        if ("<init>".equals(name)) {
+        if (CTOR_NAME.equals(name)) {
             lastConstructedType = owner;
         }
     }
@@ -286,7 +288,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         
         super.visitTypeInsn(Opcodes.NEW, ARRAYLIST_CLASS_NAME);
         super.visitInsn(Opcodes.DUP);
-        super.visitMethodInsn(Opcodes.INVOKESPECIAL, ARRAYLIST_CLASS_NAME, "<init>", "()V", false);
+        super.visitMethodInsn(Opcodes.INVOKESPECIAL, ARRAYLIST_CLASS_NAME, CTOR_NAME, "()V", false);
         
         for (Parm parm : parms) {
             super.visitInsn(Opcodes.DUP);
@@ -337,7 +339,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
             super.visitInsn(Opcodes.POP);
         }
         
-        super.visitMethodInsn(Opcodes.INVOKESPECIAL,  METHODINFO_CLASS_NAME, "<init>", "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/List;)V", false);
+        super.visitMethodInsn(Opcodes.INVOKESPECIAL,  METHODINFO_CLASS_NAME, CTOR_NAME, "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/List;)V", false);
 
         //add(methodInfo);
         super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "add", "(Ljava/lang/Object;)Z", true);
