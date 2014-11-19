@@ -64,6 +64,9 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     private List<Parm> parms = new ArrayList<>();
     private int parmCnt;
     private boolean isCtor;
+    private String lastConstructedType;
+    private int frameLocalsCnt;
+    private Object[] frameLocals;
     
     public StackTraceMethodVisitor(MethodVisitor mv, String cls, String mName, boolean isStatic, String desc) {
         super(Opcodes.ASM5, mv);
@@ -101,7 +104,15 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         }
         
         injectCallStackPopulation();
-     }
+    }
+    
+
+    @Override
+    public void visitFrame(int type, int nLocal, Object[] local, int nStack, Object[] stack) {
+        super.visitFrame(type, nLocal, local, nStack, stack);
+        frameLocalsCnt = nLocal;
+        frameLocals = local;
+    }
 
     @Override
     public void visitInsn(int opcode) {
@@ -161,7 +172,14 @@ public class StackTraceMethodVisitor extends MethodVisitor {
                 super.visitJumpInsn(Opcodes.GOTO, continueLabel);
                 super.visitLabel(endTryLabel);
                 super.visitLabel(catchLabel);
+                Object[] frameStack = new Object[2];
+                frameStack[0] = lastConstructedType;
+                frameStack[1] = NOSUCHFIELDEXCEPTION_CLASS_NAME;
+                super.visitFrame(Opcodes.F_FULL, frameLocalsCnt, frameLocals, 2, frameStack);
                 super.visitInsn(Opcodes.POP);
+                frameStack = new Object[1];
+                frameStack[0] = lastConstructedType;
+                super.visitFrame(Opcodes.F_FULL, frameLocalsCnt, frameLocals, 1, frameStack);
                 super.visitLabel(continueLabel);
             }
         }
@@ -192,6 +210,10 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     public void visitMethodInsn(int opcode, String owner, String name,
             String desc, boolean itf) {
         super.visitMethodInsn(opcode, owner, name, desc, itf);
+        
+        if ("<init>".equals(name)) {
+            lastConstructedType = owner;
+        }
     }
 
     @Override
