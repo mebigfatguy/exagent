@@ -32,8 +32,9 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.TypePath;
+import org.objectweb.asm.commons.LocalVariablesSorter;
 
-public class StackTraceMethodVisitor extends MethodVisitor {
+public class StackTraceMethodVisitor extends LocalVariablesSorter {
 
     private static Pattern PARM_PATTERN = Pattern.compile("([ZCBSIJFD]|(?:L[^;]+;)+)");
     
@@ -66,16 +67,14 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     private List<Parm> parms = new ArrayList<>();
     private int parmCnt;
     private boolean isCtor;
-    private String lastConstructedType;
-    private int frameLocalsCnt;
-    private Object[] frameLocals;
+    private int exReg, messageReg;
     
-    public StackTraceMethodVisitor(MethodVisitor mv, String cls, String mName, boolean isStatic, String desc) {
-        super(Opcodes.ASM5, mv);
+    public StackTraceMethodVisitor(MethodVisitor mv, String cls, String mName, int access, String desc) {
+        super(Opcodes.ASM5, access, desc, mv);
         clsName = cls;
         methodName = mName;
         
-        int register = isStatic ? 0 : 1;
+        int register = ((access & Opcodes.ACC_STATIC) != 0) ? 0 : 1;
         int parmIdx = 1;
         List<String> sigs = parseSignature(desc);
         for (String sig : sigs) {
@@ -107,14 +106,6 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         
         injectCallStackPopulation();
     }
-    
-
-    @Override
-    public void visitFrame(int type, int nLocal, Object[] local, int nStack, Object[] stack) {
-        super.visitFrame(type, nLocal, local, nStack, stack);
-        frameLocalsCnt = nLocal;
-        frameLocals = local;
-    }
 
     @Override
     public void visitInsn(int opcode) {
@@ -134,6 +125,11 @@ public class StackTraceMethodVisitor extends MethodVisitor {
                 super.visitInsn(Opcodes.POP);
             } else if (opcode == Opcodes.ATHROW) {
                 
+                exReg = newLocal(Type.getObjectType("java/lang/Throwable"));
+                messageReg = newLocal(Type.getObjectType("java/lang/String"));
+                
+                super.visitVarInsn(Opcodes.ASTORE, exReg);
+                
                 Label tryLabel = new Label();
                 Label endTryLabel = new Label();
                 Label catchLabel = new Label();
@@ -143,8 +139,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
                 
                 super.visitLabel(tryLabel);
                 
-                super.visitInsn(Opcodes.DUP);                
-                super.visitInsn(Opcodes.DUP);
+                super.visitVarInsn(Opcodes.ALOAD, exReg);
                 super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THROWABLE_CLASS_NAME, "getMessage", "()Ljava/lang/String;", false);
                 
                 super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", signaturizeClass(THREADLOCAL_CLASS_NAME));
@@ -159,30 +154,25 @@ public class StackTraceMethodVisitor extends MethodVisitor {
 
                 super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, OBJECT_CLASS_NAME, "toString", "()Ljava/lang/String;", false);
                 super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, STRING_CLASS_NAME, "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
-                super.visitInsn(Opcodes.SWAP);
-                super.visitInsn(Opcodes.DUP);
+                super.visitVarInsn(Opcodes.ASTORE, messageReg);
+                super.visitVarInsn(Opcodes.ALOAD, exReg);
                 super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, OBJECT_CLASS_NAME, "getClass",  "()Ljava/lang/Class;", false);
                 super.visitLdcInsn("detailMessage");
                 super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, CLASS_CLASS_NAME, "getDeclaredField", "(Ljava/lang/String;)Ljava/lang/reflect/Field;", false);
                 super.visitInsn(Opcodes.DUP);
                 super.visitLdcInsn(true);
                 super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, FIELD_CLASS_NAME, "setAccessible", "(Z)V", false);
-                super.visitInsn(Opcodes.SWAP);
-                super.visitInsn(Opcodes.DUP2_X1);
-                super.visitInsn(Opcodes.POP2);
+                super.visitVarInsn(Opcodes.ALOAD, exReg);
+                super.visitVarInsn(Opcodes.ALOAD, messageReg);
                 super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, FIELD_CLASS_NAME, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V", false);
                 super.visitJumpInsn(Opcodes.GOTO, continueLabel);
                 super.visitLabel(endTryLabel);
+                
                 super.visitLabel(catchLabel);
-                Object[] frameStack = new Object[2];
-                frameStack[0] = lastConstructedType;
-                frameStack[1] = NOSUCHFIELDEXCEPTION_CLASS_NAME;
-                super.visitFrame(Opcodes.F_FULL, frameLocalsCnt, frameLocals, 2, frameStack);
                 super.visitInsn(Opcodes.POP);
-                frameStack = new Object[1];
-                frameStack[0] = lastConstructedType;
-                super.visitFrame(Opcodes.F_FULL, frameLocalsCnt, frameLocals, 1, frameStack);
+                
                 super.visitLabel(continueLabel);
+                super.visitVarInsn(Opcodes.ALOAD, exReg);
             }
         }
         super.visitInsn(opcode);
@@ -212,10 +202,6 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     public void visitMethodInsn(int opcode, String owner, String name,
             String desc, boolean itf) {
         super.visitMethodInsn(opcode, owner, name, desc, itf);
-        
-        if (CTOR_NAME.equals(name)) {
-            lastConstructedType = owner;
-        }
     }
 
     @Override

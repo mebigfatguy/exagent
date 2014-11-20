@@ -37,7 +37,7 @@
         <mkdir dir="${lib.dir}" />
         <yank:yank yankFile="${basedir}/yank.xls" destination="${lib.dir}" proxyServer="${proxy.server}" source="true" separateClassifierTypes="true">
             <server url="http://repo1.maven.org/maven2" />
-        	<generatePath classpathName="exagent.classpath"/>
+        	<generatePath classpathName="${exagent.classpath}"/>
         </yank:yank>
     </target>
 	
