@@ -156,12 +156,7 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
                 super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, STRING_CLASS_NAME, "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
                 super.visitVarInsn(Opcodes.ASTORE, messageReg);
                 super.visitVarInsn(Opcodes.ALOAD, exReg);
-                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, OBJECT_CLASS_NAME, "getClass",  "()Ljava/lang/Class;", false);
-                super.visitLdcInsn("detailMessage");
-                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, CLASS_CLASS_NAME, "getDeclaredField", "(Ljava/lang/String;)Ljava/lang/reflect/Field;", false);
-                super.visitInsn(Opcodes.DUP);
-                super.visitLdcInsn(true);
-                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, FIELD_CLASS_NAME, "setAccessible", "(Z)V", false);
+                super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "getMessageField", "(Ljava/lang/Throwable;)Ljava/lang/reflect/Field;", false);
                 super.visitVarInsn(Opcodes.ALOAD, exReg);
                 super.visitVarInsn(Opcodes.ALOAD, messageReg);
                 super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, FIELD_CLASS_NAME, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V", false);

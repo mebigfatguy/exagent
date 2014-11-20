@@ -18,6 +18,7 @@
 package com.mebigfatguy.exagent;
 
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +30,17 @@ public class ExAgent {
             return new ArrayList<>();
         }
     };
+    
+    public static Field getMessageField(Throwable t) throws NoSuchFieldException {
+        Class<?> c = t.getClass();
+        while (c != Throwable.class) {
+            c = c.getSuperclass();
+        }
+        
+        Field f = c.getDeclaredField("detailMessage");
+        f.setAccessible(true);
+        return f;
+    }
     
     public static void premain(String agentArguments, Instrumentation instrumentation) {
         StackTraceTransformer mutator = new StackTraceTransformer();
