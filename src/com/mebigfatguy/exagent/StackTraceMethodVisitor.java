@@ -140,26 +140,9 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
                 super.visitLabel(tryLabel);
                 
                 super.visitVarInsn(Opcodes.ALOAD, exReg);
-                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THROWABLE_CLASS_NAME, "getMessage", "()Ljava/lang/String;", false);
-                
-                super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", signaturizeClass(THREADLOCAL_CLASS_NAME));
-                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
-                super.visitTypeInsn(Opcodes.CHECKCAST, LIST_CLASS_NAME);
-                
-                super.visitInsn(Opcodes.DUP);
-                super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "size", "()I", true);
-                super.visitInsn(Opcodes.ICONST_1);
-                super.visitInsn(Opcodes.ISUB);
-                super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "remove", "(I)Ljava/lang/Object;", true);
+                super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "embellishMessage", "(Ljava/lang/Throwable;)V", false);
+                super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "()V", false);
 
-                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, OBJECT_CLASS_NAME, "toString", "()Ljava/lang/String;", false);
-                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, STRING_CLASS_NAME, "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
-                super.visitVarInsn(Opcodes.ASTORE, messageReg);
-                super.visitVarInsn(Opcodes.ALOAD, exReg);
-                super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "getMessageField", "(Ljava/lang/Throwable;)Ljava/lang/reflect/Field;", false);
-                super.visitVarInsn(Opcodes.ALOAD, exReg);
-                super.visitVarInsn(Opcodes.ALOAD, messageReg);
-                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, FIELD_CLASS_NAME, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V", false);
                 super.visitJumpInsn(Opcodes.GOTO, continueLabel);
                 super.visitLabel(endTryLabel);
                 

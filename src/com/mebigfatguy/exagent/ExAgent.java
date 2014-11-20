@@ -31,7 +31,26 @@ public class ExAgent {
         }
     };
     
-    public static Field getMessageField(Throwable t) throws NoSuchFieldException {
+    public static void embellishMessage(Throwable t) throws IllegalAccessException, NoSuchFieldException {
+        StringBuilder msg = new StringBuilder();
+        for (MethodInfo mi : METHOD_INFO.get()) {
+            msg.insert(0, mi.toString());
+            msg.insert(0, "\n");
+        }
+        msg.insert(0, t.getMessage());
+
+        Field f = getMessageField(t);
+        f.set(t, msg.toString());
+    }
+    
+    public static void popMethodInfo() {
+        List<MethodInfo> mi = METHOD_INFO.get();
+        if (!mi.isEmpty()) {
+            mi.remove(mi.size() - 1);
+        }
+    }
+    
+    private static Field getMessageField(Throwable t) throws NoSuchFieldException {
         Class<?> c = t.getClass();
         while (c != Throwable.class) {
             c = c.getSuperclass();
