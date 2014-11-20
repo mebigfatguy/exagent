@@ -111,18 +111,7 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
     public void visitInsn(int opcode) {
         if (!isCtor) {
             if (RETURN_CODES.get(opcode)) {
-                // ExAgent.METHOD_INFO.get();
-                super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", signaturizeClass(THREADLOCAL_CLASS_NAME));
-                super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
-                super.visitTypeInsn(Opcodes.CHECKCAST, LIST_CLASS_NAME);
-                
-                //remove(list.size() - 1);
-                super.visitInsn(Opcodes.DUP);
-                super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "size", "()I", true);
-                super.visitInsn(Opcodes.ICONST_1);
-                super.visitInsn(Opcodes.ISUB);
-                super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "remove", "(I)Ljava/lang/Object;", true);
-                super.visitInsn(Opcodes.POP);
+                super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "()V", false);
             } else if (opcode == Opcodes.ATHROW) {
                 
                 exReg = newLocal(Type.getObjectType("java/lang/Throwable"));
