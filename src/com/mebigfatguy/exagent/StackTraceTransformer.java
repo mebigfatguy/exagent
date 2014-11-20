@@ -20,7 +20,6 @@ package com.mebigfatguy.exagent;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
@@ -44,11 +43,10 @@ public class StackTraceTransformer implements ClassFileTransformer {
             return classfileBuffer;
         }
         
-        System.out.println(className);
         ClassReader cr = new ClassReader(classfileBuffer);
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
         ClassVisitor stackTraceVisitor = new StackTraceClassVisitor(cw);
-        cr.accept(stackTraceVisitor, 0);
+        cr.accept(stackTraceVisitor, ClassReader.EXPAND_FRAMES);
         
         debugWriteBytes(className, cw.toByteArray());
         return cw.toByteArray();
