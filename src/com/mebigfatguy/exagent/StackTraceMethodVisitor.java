@@ -247,6 +247,9 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
             super.visitInsn(Opcodes.DUP);
             
             super.visitLdcInsn(parm.name);
+            super.visitLdcInsn(": ");
+            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, STRING_CLASS_NAME, "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
+            
             switch (parm.signature) {
 
             case "C":
