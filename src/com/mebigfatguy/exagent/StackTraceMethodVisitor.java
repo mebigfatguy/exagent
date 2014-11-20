@@ -62,7 +62,7 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
     private List<Parm> parms = new ArrayList<>();
     private int parmCnt;
     private boolean isCtor;
-    private int exReg, messageReg;
+    private int exReg;
     
     public StackTraceMethodVisitor(MethodVisitor mv, String cls, String mName, int access, String desc) {
         super(Opcodes.ASM5, access, desc, mv);
@@ -111,7 +111,6 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
             } else if (opcode == Opcodes.ATHROW) {
                 
                 exReg = newLocal(Type.getObjectType("java/lang/Throwable"));
-                messageReg = newLocal(Type.getObjectType("java/lang/String"));
                 
                 super.visitVarInsn(Opcodes.ASTORE, exReg);
                 
