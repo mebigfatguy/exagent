@@ -17,7 +17,6 @@
  */
 package com.mebigfatguy.exagent;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -44,10 +43,6 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
     private static String THREADLOCAL_CLASS_NAME = ThreadLocal.class.getName().replace('.', '/');
     private static String LIST_CLASS_NAME = List.class.getName().replace('.', '/');
     private static String ARRAYLIST_CLASS_NAME = ArrayList.class.getName().replace('.', '/');
-    private static String THROWABLE_CLASS_NAME = Throwable.class.getName().replace('.', '/');
-    private static String OBJECT_CLASS_NAME = Object.class.getName().replace('.', '/');
-    private static String CLASS_CLASS_NAME = Class.class.getName().replace('.', '/');
-    private static String FIELD_CLASS_NAME = Field.class.getName().replace('.', '/');
     private static String NOSUCHFIELDEXCEPTION_CLASS_NAME = NoSuchFieldException.class.getName().replace('.', '/');
     
     private static BitSet RETURN_CODES = new BitSet();
@@ -99,6 +94,7 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
     public void visitCode() {
         super.visitCode();
         
+        // TODO: if it's a constructor we have to do this after the super call
         isCtor = CTOR_NAME.equals(methodName);
         if (isCtor || ("<clinit>".equals(methodName))) {
             return;
