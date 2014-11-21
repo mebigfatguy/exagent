@@ -61,6 +61,7 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
     private String methodName;
     private List<Parm> parms = new ArrayList<>();
     private boolean isCtor;
+    private boolean sawInvokeSpecial;
     private int exReg;
     
     public StackTraceMethodVisitor(MethodVisitor mv, String cls, String mName, int access, String desc) {
@@ -96,7 +97,7 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
 
     @Override
     public void visitInsn(int opcode) {
-        if (!isCtor) {
+        if (!"<clinit>".equals(methodName)) {
             if (RETURN_CODES.get(opcode)) {
                 super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "()V", false);
             } else if (opcode == Opcodes.ATHROW) {
@@ -155,6 +156,12 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
     public void visitMethodInsn(int opcode, String owner, String name,
             String desc, boolean itf) {
         super.visitMethodInsn(opcode, owner, name, desc, itf);
+        
+        if ((opcode == Opcodes.INVOKESPECIAL) && isCtor && !sawInvokeSpecial) {
+            sawInvokeSpecial = true;
+            
+            injectCallStackPopulation();
+        }
     }
 
     @Override
