@@ -62,7 +62,7 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
     private List<Parm> parms = new ArrayList<>();
     private boolean isCtor;
     private boolean sawInvokeSpecial;
-    private int exReg;
+    private int exReg = -1;
     
     public StackTraceMethodVisitor(MethodVisitor mv, String cls, String mName, int access, String desc) {
         super(Opcodes.ASM5, access, desc, mv);
@@ -102,7 +102,9 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
                 super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "()V", false);
             } else if (opcode == Opcodes.ATHROW) {
                 
-                exReg = newLocal(Type.getObjectType("java/lang/Throwable"));
+                if (exReg < 0) {
+                    exReg = newLocal(Type.getObjectType("java/lang/Throwable"));
+                }
                 
                 super.visitVarInsn(Opcodes.ASTORE, exReg);
                 
