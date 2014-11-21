@@ -17,7 +17,6 @@
  */
 package com.mebigfatguy.exagent;
 
-import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
@@ -38,19 +37,9 @@ public class StackTraceClassVisitor extends ClassVisitor {
     }
 
     @Override
-    public void visitAttribute(Attribute attr) {
-        super.visitAttribute(attr);
-    }
-
-    @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         return new StackTraceMethodVisitor(mv, clsName, name, access, desc);
-    }
-
-    @Override
-    public void visitEnd() {
-        super.visitEnd();
     }
     
     @Override

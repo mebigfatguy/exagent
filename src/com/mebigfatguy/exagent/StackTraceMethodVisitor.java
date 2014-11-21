@@ -23,14 +23,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
-import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.TypePath;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
 public class StackTraceMethodVisitor extends LocalVariablesSorter {
@@ -75,11 +71,6 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
             parms.add(new Parm(sig, register));
             register += ("J".equals(sig) || "D".equals(sig)) ? 2 : 1;
         }
-    }
-
-    @Override
-    public void visitAttribute(Attribute attr) {
-        super.visitAttribute(attr);
     }
 
     @Override
@@ -137,26 +128,6 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
     }
 
     @Override
-    public void visitIntInsn(int opcode, int operand) {
-        super.visitIntInsn(opcode, operand);
-    }
-
-    @Override
-    public void visitVarInsn(int opcode, int var) {
-        super.visitVarInsn(opcode, var);
-    }
-
-    @Override
-    public void visitTypeInsn(int opcode, String type) {
-        super.visitTypeInsn(opcode, type);
-    }
-
-    @Override
-    public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-        super.visitFieldInsn(opcode, owner, name, desc);
-    }
-
-    @Override
     public void visitMethodInsn(int opcode, String owner, String name,
             String desc, boolean itf) {
         super.visitMethodInsn(opcode, owner, name, desc, itf);
@@ -168,61 +139,6 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
         }
     }
 
-    @Override
-    public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
-        super.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
-    }
-
-    @Override
-    public void visitJumpInsn(int opcode, Label label) {
-        super.visitJumpInsn(opcode, label);
-    }
-
-    @Override
-    public void visitLabel(Label label) {
-        super.visitLabel(label);
-    }
-
-    @Override
-    public void visitLdcInsn(Object cst) {
-        super.visitLdcInsn(cst);
-    }
-
-    @Override
-    public void visitIincInsn(int var, int increment) {
-        super.visitIincInsn(var, increment);
-    }
-
-    @Override
-    public void visitTableSwitchInsn(int min, int max, Label dflt, Label... labels) {
-        super.visitTableSwitchInsn(min, max, dflt, labels);
-    }
-
-    @Override
-    public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
-        super.visitLookupSwitchInsn(dflt, keys, labels);
-    }
-
-    @Override
-    public void visitMultiANewArrayInsn(String desc, int dims) {
-        super.visitMultiANewArrayInsn(desc, dims);
-    }
-
-    @Override
-    public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
-        super.visitTryCatchBlock(start, end, handler, type);
-    }
-
-    @Override
-    public AnnotationVisitor visitTryCatchAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-        return super.visitTryCatchAnnotation(typeRef, typePath, desc, visible);
-    }
-    
-    @Override
-    public void visitEnd() {
-        super.visitEnd();
-    }
-    
     private void injectCallStackPopulation() {
         
         // ExAgent.METHOD_INFO.get();
