@@ -96,6 +96,9 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
 
     @Override
     public void visitInsn(int opcode) {
+        // TODO: popMethod needs to take an arg as to how many to pop. create a depth parm on entry as to how
+        // many to pop to
+        
         if (!"<clinit>".equals(methodName)) {
             if (RETURN_CODES.get(opcode)) {
                 super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "()V", false);
