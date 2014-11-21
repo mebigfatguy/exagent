@@ -60,7 +60,6 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
     private String clsName;
     private String methodName;
     private List<Parm> parms = new ArrayList<>();
-    private int parmCnt;
     private boolean isCtor;
     private int exReg;
     
@@ -70,19 +69,11 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
         methodName = mName;
         
         int register = ((access & Opcodes.ACC_STATIC) != 0) ? 0 : 1;
-        int parmIdx = 1;
         List<String> sigs = parseSignature(desc);
         for (String sig : sigs) {
-            parms.add(new Parm("parm " + parmIdx++, sig, register));
+            parms.add(new Parm(sig, register));
             register += ("J".equals(sig) || "D".equals(sig)) ? 2 : 1;
         }
-    }
-    
-    @Override
-    public void visitParameter(String name, int access) {
-        super.visitParameter(name, access);
-        if (name != null)
-            parms.get(++parmCnt).name = name;
     }
 
     @Override
@@ -240,11 +231,7 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
         
         for (Parm parm : parms) {
             super.visitInsn(Opcodes.DUP);
-            
-            super.visitLdcInsn(parm.name);
-            super.visitLdcInsn(": ");
-            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, STRING_CLASS_NAME, "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
-            
+                  
             switch (parm.signature) {
 
             case "C":
@@ -283,9 +270,7 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
                 super.visitVarInsn(Opcodes.ALOAD, parm.register);
                 super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
                 break;
-            }
-            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, STRING_CLASS_NAME, "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
-            
+            }            
             super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "add", "(Ljava/lang/Object;)Z", true);
             super.visitInsn(Opcodes.POP);
         }

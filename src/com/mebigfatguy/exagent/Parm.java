@@ -18,12 +18,10 @@
 package com.mebigfatguy.exagent;
 
 public class Parm {
-    String name;
     String signature;
     int register;
     
-    Parm(String nm, String sig, int reg) {
-        name = nm;
+    public Parm(String sig, int reg) {
         signature = sig;
         register = reg;
     }
