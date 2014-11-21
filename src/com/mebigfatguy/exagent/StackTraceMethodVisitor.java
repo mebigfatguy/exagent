@@ -86,7 +86,6 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
     public void visitCode() {
         super.visitCode();
         
-        // TODO: if it's a constructor we have to do this after the super call
         isCtor = CTOR_NAME.equals(methodName);
         if (isCtor || ("<clinit>".equals(methodName))) {
             return;
