@@ -78,7 +78,7 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
         super.visitCode();
         
         isCtor = CTOR_NAME.equals(methodName);
-        if (isCtor || ("<clinit>".equals(methodName))) {
+        if (isCtor) {
             return;
         }
         
@@ -90,39 +90,37 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
         // TODO: popMethod needs to take an arg as to how many to pop. create a depth parm on entry as to how
         // many to pop to
         
-        if (!"<clinit>".equals(methodName)) {
-            if (RETURN_CODES.get(opcode)) {
-                super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "()V", false);
-            } else if (opcode == Opcodes.ATHROW) {
-                
-                if (exReg < 0) {
-                    exReg = newLocal(Type.getObjectType("java/lang/Throwable"));
-                }
-                
-                super.visitVarInsn(Opcodes.ASTORE, exReg);
-                
-                Label tryLabel = new Label();
-                Label endTryLabel = new Label();
-                Label catchLabel = new Label();
-                Label continueLabel = new Label();
-                
-                super.visitTryCatchBlock(tryLabel, endTryLabel, catchLabel, NOSUCHFIELDEXCEPTION_CLASS_NAME);
-                
-                super.visitLabel(tryLabel);
-                
-                super.visitVarInsn(Opcodes.ALOAD, exReg);
-                super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "embellishMessage", "(Ljava/lang/Throwable;)V", false);
-                super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "()V", false);
-
-                super.visitJumpInsn(Opcodes.GOTO, continueLabel);
-                super.visitLabel(endTryLabel);
-                
-                super.visitLabel(catchLabel);
-                super.visitInsn(Opcodes.POP);
-                
-                super.visitLabel(continueLabel);
-                super.visitVarInsn(Opcodes.ALOAD, exReg);
+        if (RETURN_CODES.get(opcode)) {
+            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "()V", false);
+        } else if (opcode == Opcodes.ATHROW) {
+            
+            if (exReg < 0) {
+                exReg = newLocal(Type.getObjectType("java/lang/Throwable"));
             }
+            
+            super.visitVarInsn(Opcodes.ASTORE, exReg);
+            
+            Label tryLabel = new Label();
+            Label endTryLabel = new Label();
+            Label catchLabel = new Label();
+            Label continueLabel = new Label();
+            
+            super.visitTryCatchBlock(tryLabel, endTryLabel, catchLabel, NOSUCHFIELDEXCEPTION_CLASS_NAME);
+            
+            super.visitLabel(tryLabel);
+            
+            super.visitVarInsn(Opcodes.ALOAD, exReg);
+            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "embellishMessage", "(Ljava/lang/Throwable;)V", false);
+            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "()V", false);
+
+            super.visitJumpInsn(Opcodes.GOTO, continueLabel);
+            super.visitLabel(endTryLabel);
+            
+            super.visitLabel(catchLabel);
+            super.visitInsn(Opcodes.POP);
+            
+            super.visitLabel(continueLabel);
+            super.visitVarInsn(Opcodes.ALOAD, exReg);
         }
         super.visitInsn(opcode);
     }
