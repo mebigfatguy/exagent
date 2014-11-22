@@ -18,6 +18,7 @@
 package com.mebigfatguy.exagent;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -32,7 +33,7 @@ import org.objectweb.asm.TypePath;
 
 public class StackTraceMethodVisitor extends MethodVisitor {
 
-    private static Pattern PARM_PATTERN = Pattern.compile("(\\[*(?:[ZCBSIJFD]|(?:L[^;]+;))+)");
+    private static Pattern PARM_PATTERN = Pattern.compile("(\\[*(?:[ZCBSIJFD]|(?:L[^;]+;)+))");
     
     private static String EXAGENT_CLASS_NAME = ExAgent.class.getName().replace('.', '/');
     private static String METHODINFO_CLASS_NAME = MethodInfo.class.getName().replace('.', '/');
@@ -40,6 +41,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     private static String THREADLOCAL_CLASS_NAME = ThreadLocal.class.getName().replace('.', '/');
     private static String LIST_CLASS_NAME = List.class.getName().replace('.', '/');
     private static String ARRAYLIST_CLASS_NAME = ArrayList.class.getName().replace('.', '/');
+    private static String ARRAYS_CLASS_NAME = Arrays.class.getName().replace('.', '/');
     private static String NOSUCHFIELDEXCEPTION_CLASS_NAME = NoSuchFieldException.class.getName().replace('.', '/');
     
     private static BitSet RETURN_CODES = new BitSet();
@@ -233,7 +235,11 @@ public class StackTraceMethodVisitor extends MethodVisitor {
                 
             default:
                 super.visitVarInsn(Opcodes.ALOAD, parm.register);
-                super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+                if (parm.signature.startsWith("[")) {
+                    super.visitMethodInsn(Opcodes.INVOKESTATIC, ARRAYS_CLASS_NAME, "toString", "([Ljava/lang/Object;)Ljava/lang/String;", false);
+                } else {
+                    super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+                }
                 break;
             }            
             super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "add", "(Ljava/lang/Object;)Z", true);
