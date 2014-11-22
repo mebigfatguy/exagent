@@ -43,9 +43,9 @@ public class ExAgent {
         f.set(t, msg.toString());
     }
     
-    public static void popMethodInfo() {
+    public static void popMethodInfo(int toDepth) {
         List<MethodInfo> mi = METHOD_INFO.get();
-        if (!mi.isEmpty()) {
+        while (!mi.isEmpty() && (mi.size() > toDepth)) {
             mi.remove(mi.size() - 1);
         }
     }

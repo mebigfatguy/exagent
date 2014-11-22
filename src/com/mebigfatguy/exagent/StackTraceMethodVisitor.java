@@ -23,13 +23,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.LocalVariablesSorter;
+import org.objectweb.asm.TypePath;
 
-public class StackTraceMethodVisitor extends LocalVariablesSorter {
+public class StackTraceMethodVisitor extends MethodVisitor {
 
     private static Pattern PARM_PATTERN = Pattern.compile("([ZCBSIJFD]|(?:L[^;]+;)+)");
     
@@ -58,10 +59,12 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
     private List<Parm> parms = new ArrayList<>();
     private boolean isCtor;
     private boolean sawInvokeSpecial;
-    private int exReg = -1;
+    private int lastParmReg;
+    private int exReg;
+    private int depthReg;
     
     public StackTraceMethodVisitor(MethodVisitor mv, String cls, String mName, int access, String desc) {
-        super(Opcodes.ASM5, access, desc, mv);
+        super(Opcodes.ASM5, mv);
         clsName = cls;
         methodName = mName;
         
@@ -69,8 +72,12 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
         List<String> sigs = parseSignature(desc);
         for (String sig : sigs) {
             parms.add(new Parm(sig, register));
+            lastParmReg = register;
             register += ("J".equals(sig) || "D".equals(sig)) ? 2 : 1;
         }
+        
+        exReg = register++;
+        depthReg = register;
     }
 
     @Override
@@ -87,16 +94,11 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
 
     @Override
     public void visitInsn(int opcode) {
-        // TODO: popMethod needs to take an arg as to how many to pop. create a depth parm on entry as to how
-        // many to pop to
         
         if (RETURN_CODES.get(opcode)) {
-            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "()V", false);
+            super.visitVarInsn(Opcodes.ILOAD, depthReg);
+            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "(I)V", false);
         } else if (opcode == Opcodes.ATHROW) {
-            
-            if (exReg < 0) {
-                exReg = newLocal(Type.getObjectType("java/lang/Throwable"));
-            }
             
             super.visitVarInsn(Opcodes.ASTORE, exReg);
             
@@ -111,7 +113,8 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
             
             super.visitVarInsn(Opcodes.ALOAD, exReg);
             super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "embellishMessage", "(Ljava/lang/Throwable;)V", false);
-            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "()V", false);
+            super.visitVarInsn(Opcodes.ILOAD, depthReg);
+            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "(I)V", false);
 
             super.visitJumpInsn(Opcodes.GOTO, continueLabel);
             super.visitLabel(endTryLabel);
@@ -136,13 +139,49 @@ public class StackTraceMethodVisitor extends LocalVariablesSorter {
             injectCallStackPopulation();
         }
     }
+    
+    @Override
+    public void visitVarInsn(int opcode, int var) {
+        super.visitVarInsn(opcode, (var <= lastParmReg) ? var : var + 2);
+    }
 
+    @Override
+    public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+        if (mv != null) {
+            super.visitLocalVariable(name, desc, signature, start, end, (index <= lastParmReg) ? index : index+2);
+        }
+    }
+
+    @Override
+    public AnnotationVisitor visitLocalVariableAnnotation(int typeRef,
+            TypePath typePath, Label[] start, Label[] end, int[] index,
+            String desc, boolean visible) {
+        if (api < Opcodes.ASM5) {
+            throw new RuntimeException();
+        }
+        if (mv != null) {
+            int[] modifiedIndices = new int[index.length];
+            System.arraycopy(index, 0, modifiedIndices, 0, index.length);
+            for (int i = 0; i < modifiedIndices.length; i++) {
+                if (index[i] > lastParmReg) {
+                    modifiedIndices[i] += 2;
+                }
+            }
+            return mv.visitLocalVariableAnnotation(typeRef, typePath, start, end, modifiedIndices, desc, visible);
+        }
+        return null;
+    }
+    
     private void injectCallStackPopulation() {
         
         // ExAgent.METHOD_INFO.get();
         super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", signaturizeClass(THREADLOCAL_CLASS_NAME));
         super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
         super.visitTypeInsn(Opcodes.CHECKCAST, LIST_CLASS_NAME);
+        
+        super.visitInsn(Opcodes.DUP);
+        super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "size", "()I", true);
+        super.visitVarInsn(Opcodes.ISTORE, depthReg);
         
         //new MethodInfo(cls, name, parmMap);
         super.visitTypeInsn(Opcodes.NEW, METHODINFO_CLASS_NAME);
