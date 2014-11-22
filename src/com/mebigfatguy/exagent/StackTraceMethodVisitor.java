@@ -69,6 +69,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         methodName = mName;
         
         int register = ((access & Opcodes.ACC_STATIC) != 0) ? 0 : 1;
+        lastParmReg = register - 1;
         List<String> sigs = parseSignature(desc);
         for (String sig : sigs) {
             parms.add(new Parm(sig, register));
