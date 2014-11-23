@@ -33,7 +33,7 @@ import org.objectweb.asm.TypePath;
 
 public class StackTraceMethodVisitor extends MethodVisitor {
 
-    private static Pattern PARM_PATTERN = Pattern.compile("(\\[*(?:[ZCBSIJFD]|(?:L[^;]+;)+))");
+    private static Pattern PARM_PATTERN = Pattern.compile("(\\[*(?:[ZCBSIJFD]|(?:L[^;]+;)))");
     
     private static String EXAGENT_CLASS_NAME = ExAgent.class.getName().replace('.', '/');
     private static String METHODINFO_CLASS_NAME = MethodInfo.class.getName().replace('.', '/');
