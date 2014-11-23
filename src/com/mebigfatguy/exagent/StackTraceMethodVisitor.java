@@ -61,26 +61,26 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     private List<Parm> parms = new ArrayList<>();
     private boolean isCtor;
     private boolean sawInvokeSpecial;
-    private int lastParmReg;
-    private int exReg;
-    private int depthReg;
+    private int lastParmSlot;
+    private int exLocalSlot;
+    private int depthLocalSlot;
     
     public StackTraceMethodVisitor(MethodVisitor mv, String cls, String mName, int access, String desc) {
         super(Opcodes.ASM5, mv);
         clsName = cls;
         methodName = mName;
         
-        int register = ((access & Opcodes.ACC_STATIC) != 0) ? 0 : 1;
-        lastParmReg = register - 1;
+        int nextSlot = ((access & Opcodes.ACC_STATIC) != 0) ? 0 : 1;
+        lastParmSlot = nextSlot - 1;
         List<String> sigs = parseSignature(desc);
         for (String sig : sigs) {
-            parms.add(new Parm(sig, register));
-            lastParmReg = register;
-            register += ("J".equals(sig) || "D".equals(sig)) ? 2 : 1;
+            parms.add(new Parm(sig, nextSlot));
+            lastParmSlot = nextSlot;
+            nextSlot += ("J".equals(sig) || "D".equals(sig)) ? 2 : 1;
         }
         
-        exReg = register++;
-        depthReg = register;
+        exLocalSlot = nextSlot++;
+        depthLocalSlot = nextSlot;
     }
 
     @Override
@@ -99,11 +99,11 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     public void visitInsn(int opcode) {
         
         if (RETURN_CODES.get(opcode)) {
-            super.visitVarInsn(Opcodes.ILOAD, depthReg);
+            super.visitVarInsn(Opcodes.ILOAD, depthLocalSlot);
             super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "(I)V", false);
         } else if (opcode == Opcodes.ATHROW) {
             
-            super.visitVarInsn(Opcodes.ASTORE, exReg);
+            super.visitVarInsn(Opcodes.ASTORE, exLocalSlot);
             
             Label tryLabel = new Label();
             Label endTryLabel = new Label();
@@ -114,9 +114,9 @@ public class StackTraceMethodVisitor extends MethodVisitor {
             
             super.visitLabel(tryLabel);
             
-            super.visitVarInsn(Opcodes.ALOAD, exReg);
+            super.visitVarInsn(Opcodes.ALOAD, exLocalSlot);
             super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "embellishMessage", "(Ljava/lang/Throwable;)V", false);
-            super.visitVarInsn(Opcodes.ILOAD, depthReg);
+            super.visitVarInsn(Opcodes.ILOAD, depthLocalSlot);
             super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "(I)V", false);
 
             super.visitJumpInsn(Opcodes.GOTO, continueLabel);
@@ -126,7 +126,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
             super.visitInsn(Opcodes.POP);
             
             super.visitLabel(continueLabel);
-            super.visitVarInsn(Opcodes.ALOAD, exReg);
+            super.visitVarInsn(Opcodes.ALOAD, exLocalSlot);
         }
         super.visitInsn(opcode);
     }
@@ -145,20 +145,18 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     
     @Override
     public void visitVarInsn(int opcode, int var) {
-        super.visitVarInsn(opcode, (var <= lastParmReg) ? var : var + 2);
+        super.visitVarInsn(opcode, (var <= lastParmSlot) ? var : var + 2);
     }
 
     @Override
     public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
         if (mv != null) {
-            super.visitLocalVariable(name, desc, signature, start, end, (index <= lastParmReg) ? index : index+2);
+            super.visitLocalVariable(name, desc, signature, start, end, (index <= lastParmSlot) ? index : index+2);
         }
     }
 
     @Override
-    public AnnotationVisitor visitLocalVariableAnnotation(int typeRef,
-            TypePath typePath, Label[] start, Label[] end, int[] index,
-            String desc, boolean visible) {
+    public AnnotationVisitor visitLocalVariableAnnotation(int typeRef, TypePath typePath, Label[] start, Label[] end, int[] index, String desc, boolean visible) {
         if (api < Opcodes.ASM5) {
             throw new RuntimeException();
         }
@@ -166,7 +164,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
             int[] modifiedIndices = new int[index.length];
             System.arraycopy(index, 0, modifiedIndices, 0, index.length);
             for (int i = 0; i < modifiedIndices.length; i++) {
-                if (index[i] > lastParmReg) {
+                if (index[i] > lastParmSlot) {
                     modifiedIndices[i] += 2;
                 }
             }
@@ -184,7 +182,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         
         super.visitInsn(Opcodes.DUP);
         super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "size", "()I", true);
-        super.visitVarInsn(Opcodes.ISTORE, depthReg);
+        super.visitVarInsn(Opcodes.ISTORE, depthLocalSlot);
         
         //new MethodInfo(cls, name, parmMap);
         super.visitTypeInsn(Opcodes.NEW, METHODINFO_CLASS_NAME);
