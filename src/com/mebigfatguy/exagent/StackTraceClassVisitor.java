@@ -36,9 +36,16 @@ public class StackTraceClassVisitor extends ClassVisitor {
         super.visit(version, access, name, signature, superName, interfaces);
     }
 
+    /**
+     * we ignore instrumenting toString as you can get into infinite recursive loops
+     */
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+        if (name.equals("toString") && desc.equals("()Ljava/lang/String;")) {
+            return mv;
+        }
+        
         return new StackTraceMethodVisitor(mv, clsName, name, access, desc);
     }
     
