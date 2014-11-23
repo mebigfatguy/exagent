@@ -147,6 +147,11 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     public void visitVarInsn(int opcode, int var) {
         super.visitVarInsn(opcode, (var <= lastParmSlot) ? var : var + 2);
     }
+    
+    @Override
+    public void visitIincInsn(int var, int increment) {
+        mv.visitIincInsn((var <= lastParmSlot) ? var : var + 2, increment);
+    }
 
     @Override
     public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
