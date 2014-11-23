@@ -150,9 +150,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
-        if (mv != null) {
-            super.visitLocalVariable(name, desc, signature, start, end, (index <= lastParmSlot) ? index : index+2);
-        }
+        super.visitLocalVariable(name, desc, signature, start, end, (index <= lastParmSlot) ? index : index+2);
     }
 
     @Override
@@ -160,17 +158,14 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         if (api < Opcodes.ASM5) {
             throw new RuntimeException();
         }
-        if (mv != null) {
-            int[] modifiedIndices = new int[index.length];
-            System.arraycopy(index, 0, modifiedIndices, 0, index.length);
-            for (int i = 0; i < modifiedIndices.length; i++) {
-                if (index[i] > lastParmSlot) {
-                    modifiedIndices[i] += 2;
-                }
+        int[] modifiedIndices = new int[index.length];
+        System.arraycopy(index, 0, modifiedIndices, 0, index.length);
+        for (int i = 0; i < modifiedIndices.length; i++) {
+            if (index[i] > lastParmSlot) {
+                modifiedIndices[i] += 2;
             }
-            return mv.visitLocalVariableAnnotation(typeRef, typePath, start, end, modifiedIndices, desc, visible);
         }
-        return null;
+        return super.visitLocalVariableAnnotation(typeRef, typePath, start, end, modifiedIndices, desc, visible);
     }
     
     private void injectCallStackPopulation() {
