@@ -20,6 +20,7 @@ package com.mebigfatguy.exagent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,6 +43,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     private static String LIST_CLASS_NAME = List.class.getName().replace('.', '/');
     private static String ARRAYLIST_CLASS_NAME = ArrayList.class.getName().replace('.', '/');
     private static String ARRAYS_CLASS_NAME = Arrays.class.getName().replace('.', '/');
+    private static String COLLECTIONS_CLASS_NAME = Collections.class.getName().replace('.', '/');
     private static String NOSUCHFIELDEXCEPTION_CLASS_NAME = NoSuchFieldException.class.getName().replace('.', '/');
     
     private static BitSet RETURN_CODES = new BitSet();
@@ -188,60 +190,64 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         super.visitTypeInsn(Opcodes.NEW, METHODINFO_CLASS_NAME);
         super.visitInsn(Opcodes.DUP);
         super.visitLdcInsn(Type.getObjectType(clsName.replace('.',  '/')));
-        super.visitLdcInsn(methodName);
+        super.visitLdcInsn(methodName);        
         
-        super.visitTypeInsn(Opcodes.NEW, ARRAYLIST_CLASS_NAME);
-        super.visitInsn(Opcodes.DUP);
-        super.visitMethodInsn(Opcodes.INVOKESPECIAL, ARRAYLIST_CLASS_NAME, CTOR_NAME, "()V", false);
-        
-        for (Parm parm : parms) {
+        if (parms.isEmpty()) {
+            super.visitMethodInsn(Opcodes.INVOKESTATIC, COLLECTIONS_CLASS_NAME, "emptyList", "()Ljava/util/List;", false);
+        } else {
+            super.visitTypeInsn(Opcodes.NEW, ARRAYLIST_CLASS_NAME);
             super.visitInsn(Opcodes.DUP);
-                  
-            switch (parm.signature) {
+            super.visitMethodInsn(Opcodes.INVOKESPECIAL, ARRAYLIST_CLASS_NAME, CTOR_NAME, "()V", false);
 
-            case "C":
-                super.visitVarInsn(Opcodes.ILOAD, parm.register);
-                super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(C)Ljava/lang/String;", false);
-                break;
-                
-            case "Z":
-                super.visitVarInsn(Opcodes.ILOAD, parm.register);
-                super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(Z)Ljava/lang/String;", false);
-                break;
-                
-            case "B":
-            case "S":
-            case "I":
-                super.visitVarInsn(Opcodes.ILOAD, parm.register);
-                super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(I)Ljava/lang/String;", false);
-                break;
-                
-            case "J":
-                super.visitVarInsn(Opcodes.LLOAD, parm.register);
-                super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(J)Ljava/lang/String;", false);
-                break;
-                
-            case "F":
-                super.visitVarInsn(Opcodes.FLOAD, parm.register);
-                super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(F)Ljava/lang/String;", false);
-                break;
-                
-            case "D":
-                super.visitVarInsn(Opcodes.DLOAD, parm.register);
-                super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(D)Ljava/lang/String;", false);
-                break;
-                
-            default:
-                super.visitVarInsn(Opcodes.ALOAD, parm.register);
-                if (parm.signature.startsWith("[")) {
-                    super.visitMethodInsn(Opcodes.INVOKESTATIC, ARRAYS_CLASS_NAME, "toString", "([Ljava/lang/Object;)Ljava/lang/String;", false);
-                } else {
-                    super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
-                }
-                break;
-            }            
-            super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "add", "(Ljava/lang/Object;)Z", true);
-            super.visitInsn(Opcodes.POP);
+            for (Parm parm : parms) {
+                super.visitInsn(Opcodes.DUP);
+                      
+                switch (parm.signature) {
+    
+                case "C":
+                    super.visitVarInsn(Opcodes.ILOAD, parm.register);
+                    super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(C)Ljava/lang/String;", false);
+                    break;
+                    
+                case "Z":
+                    super.visitVarInsn(Opcodes.ILOAD, parm.register);
+                    super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(Z)Ljava/lang/String;", false);
+                    break;
+                    
+                case "B":
+                case "S":
+                case "I":
+                    super.visitVarInsn(Opcodes.ILOAD, parm.register);
+                    super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(I)Ljava/lang/String;", false);
+                    break;
+                    
+                case "J":
+                    super.visitVarInsn(Opcodes.LLOAD, parm.register);
+                    super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(J)Ljava/lang/String;", false);
+                    break;
+                    
+                case "F":
+                    super.visitVarInsn(Opcodes.FLOAD, parm.register);
+                    super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(F)Ljava/lang/String;", false);
+                    break;
+                    
+                case "D":
+                    super.visitVarInsn(Opcodes.DLOAD, parm.register);
+                    super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(D)Ljava/lang/String;", false);
+                    break;
+                    
+                default:
+                    super.visitVarInsn(Opcodes.ALOAD, parm.register);
+                    if (parm.signature.startsWith("[")) {
+                        super.visitMethodInsn(Opcodes.INVOKESTATIC, ARRAYS_CLASS_NAME, "toString", "([Ljava/lang/Object;)Ljava/lang/String;", false);
+                    } else {
+                        super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+                    }
+                    break;
+                }            
+                super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "add", "(Ljava/lang/Object;)Z", true);
+                super.visitInsn(Opcodes.POP);
+            }
         }
         
         super.visitMethodInsn(Opcodes.INVOKESPECIAL,  METHODINFO_CLASS_NAME, CTOR_NAME, "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/List;)V", false);
