@@ -240,7 +240,12 @@ public class StackTraceMethodVisitor extends MethodVisitor {
                 default:
                     super.visitVarInsn(Opcodes.ALOAD, parm.register);
                     if (parm.signature.startsWith("[")) {
-                        super.visitMethodInsn(Opcodes.INVOKESTATIC, ARRAYS_CLASS_NAME, "toString", "([Ljava/lang/Object;)Ljava/lang/String;", false);
+                        char arrayElemTypeChar = parm.signature.charAt(1);
+                        if ((arrayElemTypeChar == 'L') || (arrayElemTypeChar == '[')) {
+                            super.visitMethodInsn(Opcodes.INVOKESTATIC, ARRAYS_CLASS_NAME, "toString", "([Ljava/lang/Object;)Ljava/lang/String;", false);
+                        } else {
+                            super.visitMethodInsn(Opcodes.INVOKESTATIC, ARRAYS_CLASS_NAME, "toString", "([" + arrayElemTypeChar + ")Ljava/lang/String;", false);                            
+                        }
                     } else {
                         super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
                     }
