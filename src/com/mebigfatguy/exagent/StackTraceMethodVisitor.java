@@ -252,7 +252,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     }
     
     private static List<String> parseSignature(String signature) {
-        List<String> parms = new ArrayList<>();
+        List<String> parms = new ArrayList<>(8);
         
         int openParenPos = signature.indexOf('(');
         int closeParenPos = signature.indexOf(')', openParenPos+1);
