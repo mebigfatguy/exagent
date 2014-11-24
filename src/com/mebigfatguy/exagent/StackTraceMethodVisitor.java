@@ -44,7 +44,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     private static String ARRAYLIST_CLASS_NAME = ArrayList.class.getName().replace('.', '/');
     private static String ARRAYS_CLASS_NAME = Arrays.class.getName().replace('.', '/');
     private static String COLLECTIONS_CLASS_NAME = Collections.class.getName().replace('.', '/');
-    private static String NOSUCHFIELDEXCEPTION_CLASS_NAME = NoSuchFieldException.class.getName().replace('.', '/');
+    private static String EXCEPTION_CLASS_NAME = Exception.class.getName().replace('.', '/');
     
     private static BitSet RETURN_CODES = new BitSet();
     static {
@@ -112,7 +112,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
             Label catchLabel = new Label();
             Label continueLabel = new Label();
             
-            super.visitTryCatchBlock(tryLabel, endTryLabel, catchLabel, NOSUCHFIELDEXCEPTION_CLASS_NAME);
+            super.visitTryCatchBlock(tryLabel, endTryLabel, catchLabel, EXCEPTION_CLASS_NAME);
             
             super.visitLabel(tryLabel);
             
