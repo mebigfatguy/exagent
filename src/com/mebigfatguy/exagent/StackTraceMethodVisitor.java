@@ -189,7 +189,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         //new MethodInfo(cls, name, parmMap);
         super.visitTypeInsn(Opcodes.NEW, METHODINFO_CLASS_NAME);
         super.visitInsn(Opcodes.DUP);
-        super.visitLdcInsn(Type.getObjectType(clsName.replace('.',  '/')));
+        super.visitLdcInsn(clsName.replace('.',  '/'));
         super.visitLdcInsn(methodName);        
         
         if (parms.isEmpty()) {
@@ -256,7 +256,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
             }
         }
         
-        super.visitMethodInsn(Opcodes.INVOKESPECIAL,  METHODINFO_CLASS_NAME, CTOR_NAME, "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/List;)V", false);
+        super.visitMethodInsn(Opcodes.INVOKESPECIAL,  METHODINFO_CLASS_NAME, CTOR_NAME, "(Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V", false);
 
         //add(methodInfo);
         super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "add", "(Ljava/lang/Object;)Z", true);

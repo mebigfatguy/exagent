@@ -21,22 +21,22 @@ import java.util.List;
 
 public class MethodInfo {
 
-    private Class<?> cls;
-    private String name;
+    private String clsName;
+    private String methodName;
     private List<String> parms;
     
-    public MethodInfo(Class<?> cls, String name, List<String> parms) {
-        this.cls = cls;
-        this.name = name;
+    public MethodInfo(String cls, String name, List<String> parms) {
+        this.clsName = cls;
+        this.methodName = name;
         this.parms = parms;
     }
 
-    public Class<?> getCls() {
-        return cls;
+    public String getCls() {
+        return clsName;
     }
 
     public String getName() {
-        return name;
+        return methodName;
     }
 
     public List<String> getParms() {
