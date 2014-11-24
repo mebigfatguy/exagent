@@ -197,7 +197,8 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         } else {
             super.visitTypeInsn(Opcodes.NEW, ARRAYLIST_CLASS_NAME);
             super.visitInsn(Opcodes.DUP);
-            super.visitMethodInsn(Opcodes.INVOKESPECIAL, ARRAYLIST_CLASS_NAME, CTOR_NAME, "()V", false);
+            super.visitIntInsn(Opcodes.BIPUSH, parms.size());
+            super.visitMethodInsn(Opcodes.INVOKESPECIAL, ARRAYLIST_CLASS_NAME, CTOR_NAME, "(I)V", false);
 
             for (Parm parm : parms) {
                 super.visitInsn(Opcodes.DUP);
