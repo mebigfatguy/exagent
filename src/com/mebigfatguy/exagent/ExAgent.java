@@ -62,7 +62,9 @@ public class ExAgent {
     }
     
     public static void premain(String agentArguments, Instrumentation instrumentation) {
-        StackTraceTransformer mutator = new StackTraceTransformer();
+        Options options = new Options(agentArguments);
+        
+        StackTraceTransformer mutator = new StackTraceTransformer(options);
         instrumentation.addTransformer(mutator);
     }
     

@@ -31,6 +31,12 @@ import org.objectweb.asm.ClassWriter;
 
 public class StackTraceTransformer implements ClassFileTransformer {
     
+    private Options options;
+    
+    public StackTraceTransformer(Options options) {
+        this.options = options;
+    }
+    
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, 
             ProtectionDomain protectionDomain,
@@ -39,7 +45,8 @@ public class StackTraceTransformer implements ClassFileTransformer {
         if (className.startsWith("java/") 
          || className.startsWith("javax/") 
          || className.startsWith("sun/") 
-         || className.startsWith("com/mebigfatguy/exagent/")) {
+         || className.startsWith("com/mebigfatguy/exagent/")
+         || !options.instrumentClass(className)) {
             return classfileBuffer;
         }
         
