@@ -24,25 +24,35 @@ public class Options {
 
     private static final String EXCLUSION_PATTERN_NAME = "exclusion_pattern";
     private static final String INCLUSION_PATTERN_NAME = "inclusion_pattern";
+    private static final String PARM_SIZE_LIMIT_NAME = "parm_size_limit";
     
     private Pattern classExclusionPattern;
     private Pattern classInclusionPattern;
+    private int parmSizeLimit;
     
     public Options(String agentArgs) {
         if (agentArgs != null) {
             String[] args = agentArgs.split(";");
             for (String arg : args) {
-                String[] kv = arg.split("=");
-                String key = kv[0].trim();
-                
-                switch (key) {
-                    case EXCLUSION_PATTERN_NAME:
-                        classExclusionPattern = Pattern.compile(kv[1].trim());
-                    break;
+                try {
+                    String[] kv = arg.split("=");
+                    String key = kv[0].trim();
                     
-                    case INCLUSION_PATTERN_NAME:
-                        classInclusionPattern = Pattern.compile(kv[1].trim());
-                    break;
+                    switch (key) {
+                        case EXCLUSION_PATTERN_NAME:
+                            classExclusionPattern = Pattern.compile(kv[1].trim());
+                        break;
+                        
+                        case INCLUSION_PATTERN_NAME:
+                            classInclusionPattern = Pattern.compile(kv[1].trim());
+                        break;
+                        
+                        case PARM_SIZE_LIMIT_NAME:
+                            parmSizeLimit = Integer.parseInt(kv[1].trim());
+                        break;
+                    }
+                } catch (Exception e) {
+                    // swallow it
                 }
             }
         }
