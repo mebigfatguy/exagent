@@ -60,22 +60,19 @@ public class Options {
     
     public boolean instrumentClass(String className) {
         
+        boolean instrument = true;
+        
         if (classExclusionPattern != null) {
             Matcher m = classExclusionPattern.matcher(className);
-            if (m.matches()) {
-                return false;
-            }
+            instrument = !m.matches();
         }
         
         if (classInclusionPattern != null) {
             Matcher m = classInclusionPattern.matcher(className);
-            if (m.matches()) {
-                return true;
-            }
-            return false;
+            instrument = m.matches();
         }
         
-        return true;
+        return instrument;
     }
     
     public int getParmSizeLimit() {
