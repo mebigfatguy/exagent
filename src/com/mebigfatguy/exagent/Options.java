@@ -78,6 +78,10 @@ public class Options {
         return true;
     }
     
+    public int getParmSizeLimit() {
+        return parmSizeLimit;
+    }
+    
     @Override
     public String toString() {
         return ToString.build(this);

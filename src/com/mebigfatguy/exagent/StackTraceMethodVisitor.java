@@ -65,11 +65,13 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     private int lastParmSlot;
     private int exLocalSlot;
     private int depthLocalSlot;
+    private int maxParmSize;
     
-    public StackTraceMethodVisitor(MethodVisitor mv, String cls, String mName, int access, String desc) {
+    public StackTraceMethodVisitor(MethodVisitor mv, String cls, String mName, int access, String desc, int parmSizeLimit) {
         super(Opcodes.ASM5, mv);
         clsName = cls;
         methodName = mName;
+        maxParmSize = parmSizeLimit;
         
         int nextSlot = ((access & Opcodes.ACC_STATIC) != 0) ? 0 : 1;
         lastParmSlot = nextSlot - 1;
@@ -249,7 +251,20 @@ public class StackTraceMethodVisitor extends MethodVisitor {
                         super.visitMethodInsn(Opcodes.INVOKESTATIC, STRING_CLASS_NAME, "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
                     }
                     break;
-                }            
+                }  
+                
+                if (maxParmSize > 0) {
+                    super.visitInsn(Opcodes.DUP);
+                    super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, STRING_CLASS_NAME, "length", "()I", false);
+                    super.visitLdcInsn(maxParmSize);
+                    Label falseLabel = new Label();
+                    super.visitJumpInsn(Opcodes.IF_ICMPLE, falseLabel);
+                    super.visitIntInsn(Opcodes.BIPUSH, 0);
+                    super.visitLdcInsn(maxParmSize);
+                    super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, STRING_CLASS_NAME, "substring", "(II)Ljava/lang/String;", false);
+                    super.visitLabel(falseLabel);
+                }
+                
                 super.visitMethodInsn(Opcodes.INVOKEINTERFACE, LIST_CLASS_NAME, "add", "(Ljava/lang/Object;)Z", true);
                 super.visitInsn(Opcodes.POP);
             }

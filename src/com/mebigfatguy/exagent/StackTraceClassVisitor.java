@@ -25,9 +25,11 @@ import org.objectweb.asm.Opcodes;
 public class StackTraceClassVisitor extends ClassVisitor {
 
     private String clsName;
+    private int maxParmSize;
     
-    public StackTraceClassVisitor(ClassWriter cw) {
+    public StackTraceClassVisitor(ClassWriter cw, int parmSizeLimit) {
         super(Opcodes.ASM5, cw);
+        maxParmSize = parmSizeLimit;
     }
     
     @Override
@@ -46,7 +48,7 @@ public class StackTraceClassVisitor extends ClassVisitor {
             return mv;
         }
         
-        return new StackTraceMethodVisitor(mv, clsName, name, access, desc);
+        return new StackTraceMethodVisitor(mv, clsName, name, access, desc, maxParmSize);
     }
     
     @Override

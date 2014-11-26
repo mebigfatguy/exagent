@@ -52,7 +52,7 @@ public class StackTraceTransformer implements ClassFileTransformer {
         
         ClassReader cr = new ClassReader(classfileBuffer);
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
-        ClassVisitor stackTraceVisitor = new StackTraceClassVisitor(cw);
+        ClassVisitor stackTraceVisitor = new StackTraceClassVisitor(cw, options.getParmSizeLimit());
         cr.accept(stackTraceVisitor, ClassReader.EXPAND_FRAMES);
         
         debugWriteBytes(className, cw.toByteArray());
