@@ -55,7 +55,7 @@ public class StackTraceTransformer implements ClassFileTransformer {
         ClassVisitor stackTraceVisitor = new StackTraceClassVisitor(cw, options.getParmSizeLimit());
         cr.accept(stackTraceVisitor, ClassReader.EXPAND_FRAMES);
         
-        debugWriteBytes(className, cw.toByteArray());
+        //debugWriteBytes(className, cw.toByteArray());
         return cw.toByteArray();
     }
     
