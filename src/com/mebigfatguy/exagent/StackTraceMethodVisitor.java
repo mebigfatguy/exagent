@@ -256,7 +256,11 @@ public class StackTraceMethodVisitor extends MethodVisitor {
                 if (maxParmSize > 0) {
                     super.visitInsn(Opcodes.DUP);
                     super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, STRING_CLASS_NAME, "length", "()I", false);
-                    super.visitLdcInsn(maxParmSize);
+                    if (maxParmSize <= 127) {
+                        super.visitIntInsn(Opcodes.BIPUSH, maxParmSize);
+                    } else {
+                        super.visitLdcInsn(maxParmSize);
+                    }
                     Label falseLabel = new Label();
                     super.visitJumpInsn(Opcodes.IF_ICMPLE, falseLabel);
                     super.visitIntInsn(Opcodes.BIPUSH, 0);
