@@ -19,6 +19,7 @@ package com.mebigfatguy.exagent;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.ConcurrentModificationException;
 
 /**
  * an automatic toString() builder using reflection
@@ -51,6 +52,8 @@ public class ToString {
                     }
                 } catch (SecurityException e) {
                     sb.append("*SECURITY_EXCEPTION*");
+                } catch (ConcurrentModificationException e) {
+                    sb.append("*CONCURRENT_EXCEPTION*");
                 }
             }
         } catch (Exception e) {
