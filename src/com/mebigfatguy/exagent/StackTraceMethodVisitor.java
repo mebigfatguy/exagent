@@ -31,11 +31,13 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.TypePath;
 
+import com.mebigfatguy.exagent.rtsupport.EXASupport;
+
 public class StackTraceMethodVisitor extends MethodVisitor {
 
     private static Pattern PARM_PATTERN = Pattern.compile("(\\[*(?:[ZCBSIJFD]|(?:L[^;]+;)))");
     
-    private static String EXAGENT_CLASS_NAME = ExAgent.class.getName().replace('.', '/');
+    private static String EXASUPPORT_CLASS_NAME = EXASupport.class.getName().replace('.', '/');
     private static String METHODINFO_CLASS_NAME = MethodInfo.class.getName().replace('.', '/');
     private static String STRING_CLASS_NAME = String.class.getName().replace('.',  '/');
     private static String THREADLOCAL_CLASS_NAME = ThreadLocal.class.getName().replace('.', '/');
@@ -103,7 +105,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
         
         if (RETURN_CODES.get(opcode)) {
             super.visitVarInsn(Opcodes.ILOAD, depthLocalSlot);
-            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "(I)V", false);
+            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXASUPPORT_CLASS_NAME, "popMethodInfo", "(I)V", false);
         } else if (opcode == Opcodes.ATHROW) {
             
             super.visitVarInsn(Opcodes.ASTORE, exLocalSlot);
@@ -118,9 +120,9 @@ public class StackTraceMethodVisitor extends MethodVisitor {
             super.visitLabel(tryLabel);
             
             super.visitVarInsn(Opcodes.ALOAD, exLocalSlot);
-            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "embellishMessage", "(Ljava/lang/Throwable;)V", false);
+            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXASUPPORT_CLASS_NAME, "embellishMessage", "(Ljava/lang/Throwable;)V", false);
             super.visitVarInsn(Opcodes.ILOAD, depthLocalSlot);
-            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXAGENT_CLASS_NAME, "popMethodInfo", "(I)V", false);
+            super.visitMethodInsn(Opcodes.INVOKESTATIC, EXASUPPORT_CLASS_NAME, "popMethodInfo", "(I)V", false);
 
             super.visitJumpInsn(Opcodes.GOTO, continueLabel);
             super.visitLabel(endTryLabel);
@@ -179,7 +181,7 @@ public class StackTraceMethodVisitor extends MethodVisitor {
     private void injectCallStackPopulation() {
         
         // ExAgent.METHOD_INFO.get();
-        super.visitFieldInsn(Opcodes.GETSTATIC, EXAGENT_CLASS_NAME, "METHOD_INFO", signaturizeClass(THREADLOCAL_CLASS_NAME));
+        super.visitFieldInsn(Opcodes.GETSTATIC, EXASUPPORT_CLASS_NAME, "METHOD_INFO", signaturizeClass(THREADLOCAL_CLASS_NAME));
         super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, THREADLOCAL_CLASS_NAME, "get", "()Ljava/lang/Object;", false);
         super.visitTypeInsn(Opcodes.CHECKCAST, LIST_CLASS_NAME);
         
