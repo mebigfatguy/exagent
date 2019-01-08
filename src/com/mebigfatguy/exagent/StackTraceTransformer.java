@@ -1,7 +1,7 @@
 /*
  * exagent - An exception stack trace embellisher
- * Copyright 2014-2017 MeBigFatGuy.com
- * Copyright 2014-2017 Dave Brosius
+ * Copyright 2014-2019 MeBigFatGuy.com
+ * Copyright 2014-2019 Dave Brosius
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
