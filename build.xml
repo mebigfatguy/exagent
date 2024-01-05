@@ -30,13 +30,13 @@
 	
    <target name="infra_jars" description="pull jars needed to build exagent to ${user.dir}/.ant/lib">
         <mkdir dir="${user.home}/.ant/lib" />
-        <get src="http://repo1.maven.org/maven2/com/mebigfatguy/yank/yank/2.0.1/yank-2.0.1.jar" dest="${user.home}/.ant/lib"/>
+        <get src="https://repo1.maven.org/maven2/com/mebigfatguy/yank/yank/2.0.1/yank-2.0.1.jar" dest="${user.home}/.ant/lib"/>
     </target>
     
     <target name="yank" xmlns:yank="antlib:com.mebigfatguy.yank" unless="no.yank">
         <mkdir dir="${lib.dir}" />
         <yank:yank yankFile="${basedir}/yank.xls" destination="${lib.dir}" proxyServer="${proxy.server}" source="true" separateClassifierTypes="true">
-            <server url="http://repo1.maven.org/maven2" />
+            <server url="https://repo1.maven.org/maven2" />
         	<generatePath classpathName="${exagent.classpath}"/>
         </yank:yank>
     </target>
